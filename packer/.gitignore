@@ -1,0 +1,3 @@
+profile.pkrvars.hcl
+/**/.ssh/*
+!/**/.ssh/*.pube
