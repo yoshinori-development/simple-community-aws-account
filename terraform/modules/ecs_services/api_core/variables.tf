@@ -18,14 +18,14 @@ variable "service" {
 
 locals {
   service = {
-    fullname      = var.service.env == null ? var.service.name : "${var.service.name}-${var.service.env}"
-    fullshortname = var.service.env == null ? var.service.name : "${var.service.shortname}-${var.service.env}"
+    fullname      = var.service.env == "" ? var.service.name : "${var.service.name}-${var.service.env}"
+    fullshortname = var.service.env == "" ? var.service.name : "${var.service.shortname}-${var.service.env}"
   }
 }
 
 locals {
-  fullname  = "${tf.flullname}-${local.service.fullname}"
-  shortname = "${tf.shortname}-${local.service.fullshortname}"
+  fullname  = "${var.tf.fullname}-${local.service.fullname}"
+  shortname = "${var.tf.shortname}-${local.service.fullshortname}"
 }
 
 variable "vpc" {
@@ -34,19 +34,26 @@ variable "vpc" {
   })
 }
 
-variable "private_subnet" {
+variable "subnet" {
   type = object({
     ids         = list(string)
     cidr_blocks = list(string)
   })
 }
 
-variable "alb_security_group_id" {
-  type = string
+variable "desired_count" {
+  type = number
 }
 
-variable "target_group_arn" {
-  type = string
+variable "load_balancer" {
+  type = object({
+    security_group_id = string
+    target_group_arn = string
+    container = object({
+      name = string
+      port = number
+    })
+  }) 
 }
 
 variable "ecs_cluster" {
@@ -62,19 +69,14 @@ variable "ecs_task_definition" {
   })
 }
 
-variable "container" {
-  type = object({
-    name = string
-    port = number
-  })
-}
-
 variable "ssm_parameter_prefix" {
   type = string
 }
 
-variable "kms_key_id" {
-  type = string
+variable "kms_key_ids" {
+  type = object({
+    rds_core = string
+  })
 }
 
 variable "service_discovery" {
@@ -83,13 +85,13 @@ variable "service_discovery" {
   })
 }
 
-variable "alarm_threshold" {
+variable "alarm_thresholds" {
   type = object({
     cpu_utilization    = string
     memory_utilization = string
   })
 }
 
-variable "sns_topic_arn" {
-  type = string
-}
+# variable "sns_topic_arn" {
+#   type = string
+# }

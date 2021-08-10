@@ -8,24 +8,15 @@ variable "tf" {
   })
 }
 
-variable "subnet_group_name" {
-  type = string
-}
-
-variable "subnet_ids" {
-  type = list(string)
-}
-
 variable "vpc" {
   type = object({
     id = string
-  })
+  }) 
 }
 
-variable "public_subnet" {
+variable "subnet" {
   type = object({
-    ids         = list(string)
-    cidr_blocks = list(string)
+    ids = list(string)
   })
 }
 
@@ -39,9 +30,31 @@ variable "domain" {
 
 variable "hosts" {
   type = object({
-    tracker = string
-    console = string
+    app_community = string
+  }) 
+}
+
+variable "targets" {
+  type = object({
+    api_core = object({
+      port = number
+      health_check = string
+    })
+    app_community = object({
+      port = number
+      health_check = string
+    })
   })
+  default = {
+    api_core = {
+      port = 8080
+      health_check = "/api/health"
+    }
+    app_community = {
+      port = 80
+      health_check = "/health"
+    }
+  }
 }
 
 variable "ssl_policy" {
@@ -51,12 +64,4 @@ variable "ssl_policy" {
 
 variable "certificate_arn" {
   type = string
-}
-
-variable "auth_console" {
-  type = object({
-    user_pool_arn       = string
-    user_pool_client_id = string
-    user_pool_domain    = string
-  })
 }

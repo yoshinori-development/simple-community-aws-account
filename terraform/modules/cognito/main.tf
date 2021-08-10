@@ -49,16 +49,12 @@ resource "aws_cognito_user_pool_client" "app" {
   allowed_oauth_scopes                 = ["openid", "email"]
   allowed_oauth_flows_user_pool_client = true
   supported_identity_providers         = ["COGNITO"]
-  callback_urls = var.callback_urls
-  # callback_urls = [
-  #   "https://${var.hosts.app_console}.${var.domain}",
-  #   "https://${var.hosts.app_console}.${var.domain}/oauth2/idpresponse"
-  # ]
+  callback_urls = var.app.callback_urls
   generate_secret = true
 }
 
 resource "aws_cognito_user_pool_domain" "console_user" {
-  domain       = var.user_pool_domain
+  domain       = var.app.user_pool_domain
   user_pool_id = aws_cognito_user_pool.console_user.id
 }
 

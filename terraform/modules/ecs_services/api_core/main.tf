@@ -9,16 +9,11 @@ resource "aws_ecs_service" "default" {
   name            = local.service.fullname
   cluster         = var.ecs_cluster.arn
   task_definition = "${data.aws_ecs_task_definition.default.family}:${data.aws_ecs_task_definition.default.revision}"
-  desired_count   = 1
+  desired_count   = var.desired_count
   launch_type = "FARGATE"
   platform_version = "1.4.0"
   propagate_tags   = "SERVICE"
   health_check_grace_period_seconds = 120
-
-  # ordered_placement_strategy {
-  #   type  = "binpack"
-  #   field = "cpu"
-  # }
 
   deployment_controller {
     type = "ECS"
@@ -34,15 +29,15 @@ resource "aws_ecs_service" "default" {
   }
 
   network_configuration {
-    subnets          = var.private_subnet.ids
+    subnets          = var.subnet.ids
     security_groups  = [aws_security_group.ecs_service.id]
     assign_public_ip = false
   }
 
   load_balancer {
-    target_group_arn = var.target_group_arn
-    container_name   = var.container.name
-    container_port   = var.container.port
+    target_group_arn = var.load_balancer.target_group_arn
+    container_name   = var.load_balancer.container.name
+    container_port   = var.load_balancer.container.port
   }
 
   service_registries {
@@ -61,10 +56,10 @@ resource "aws_security_group" "ecs_service" {
 
   ingress {
     description     = "from alb"
-    from_port       = var.container.port
-    to_port         = var.container.port
+    from_port       = var.load_balancer.container.port
+    to_port         = var.load_balancer.container.port
     protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
+    security_groups = [var.load_balancer.security_group_id]
   }
 
   ingress {
@@ -72,7 +67,7 @@ resource "aws_security_group" "ecs_service" {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = var.private_subnet.cidr_blocks
+    cidr_blocks = var.subnet.cidr_blocks
   }
 
   egress {
@@ -167,7 +162,7 @@ resource "aws_iam_policy" "task-execution-policy" {
       "Effect": "Allow",
       "Resource": [
         "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.ssm_parameter_prefix}",
-        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key:${var.kms_key_id}"
+        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key:${var.kms_key_ids.rds_core}"
       ]
     }
   ]
@@ -200,44 +195,44 @@ resource "aws_service_discovery_service" "api-core" {
 }
 
 # Cloudwatch Metric Alerms
-resource "aws_cloudwatch_metric_alarm" "cpu_utilization_too_high" {
-  alarm_name          = "${local.fullname}_cpu_utilization_too_high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "3"
-  datapoints_to_alarm = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = var.alarm_threshold.cpu_utilization
-  alarm_description   = "Average database CPU utilization too high"
-  alarm_actions       = [var.sns_topic_arn]
-  ok_actions          = [var.sns_topic_arn]
-  insufficient_data_actions = []
-  treat_missing_data  = "ignore"
-  dimensions = {
-    ClusterName = var.ecs_cluster.name
-    ServiceName = local.service_fullname
-  }
-}
+# resource "aws_cloudwatch_metric_alarm" "cpu_utilization_too_high" {
+#   alarm_name          = "${tf.fullname}_cpu_utilization_too_high"
+#   comparison_operator = "GreaterThanThreshold"
+#   evaluation_periods  = "3"
+#   datapoints_to_alarm = "2"
+#   metric_name         = "CPUUtilization"
+#   namespace           = "AWS/ECS"
+#   period              = "60"
+#   statistic           = "Average"
+#   threshold           = var.alarm_threshold.cpu_utilization
+#   alarm_description   = "Average database CPU utilization too high"
+#   alarm_actions       = [var.sns_topic_arn]
+#   ok_actions          = [var.sns_topic_arn]
+#   insufficient_data_actions = []
+#   treat_missing_data  = "ignore"
+#   dimensions = {
+#     ClusterName = var.ecs_cluster.name
+#     ServiceName = local.service_fullname
+#   }
+# }
 
-resource "aws_cloudwatch_metric_alarm" "memory_utilization_too_high" {
-  alarm_name          = "${local.infra_fullname}_${local.service_fullname}_memory_utilization_too_high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "3"
-  datapoints_to_alarm = "2"
-  metric_name         = "MemoryUtilization"
-  namespace           = "AWS/ECS"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = var.alarm_threshold.memory_utilization
-  alarm_description   = "Average database Memory utilization too high"
-  alarm_actions       = [var.sns_topic_arn]
-  ok_actions          = [var.sns_topic_arn]
-  insufficient_data_actions = []
-  treat_missing_data  = "ignore"
-  dimensions = {
-    ClusterName = var.ecs_cluster.name
-    ServiceName = local.service_fullname
-  }
-}
+# resource "aws_cloudwatch_metric_alarm" "memory_utilization_too_high" {
+#   alarm_name          = "${local.infra_fullname}_${local.service_fullname}_memory_utilization_too_high"
+#   comparison_operator = "GreaterThanThreshold"
+#   evaluation_periods  = "3"
+#   datapoints_to_alarm = "2"
+#   metric_name         = "MemoryUtilization"
+#   namespace           = "AWS/ECS"
+#   period              = "60"
+#   statistic           = "Average"
+#   threshold           = var.alarm_threshold.memory_utilization
+#   alarm_description   = "Average database Memory utilization too high"
+#   alarm_actions       = [var.sns_topic_arn]
+#   ok_actions          = [var.sns_topic_arn]
+#   insufficient_data_actions = []
+#   treat_missing_data  = "ignore"
+#   dimensions = {
+#     ClusterName = var.ecs_cluster.name
+#     ServiceName = local.service_fullname
+#   }
+# }

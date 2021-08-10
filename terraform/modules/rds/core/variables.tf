@@ -18,19 +18,21 @@ variable "vpc" {
   })
 }
 
-variable "subnet_group_id" {
-  type = string
+variable "subnet_ids" {
+  type = list(string)
 }
 
 variable "allowed_security_group_ids" {
   type = list(string)
 }
 
-variable "ssm_parameters" {
+variable "ssm" {
   type = object({
     kms_key_id = string
-    database_password = object({
-      name = string
+    parameters = object({
+      database_password = object({
+        name = string
+      })
     })
   })
 }
@@ -82,6 +84,6 @@ variable "alarm" {
       network_receive_throughtput = string
       network_transmit_throughtput = string
     })
-    sns_topic_arn = string
+    # sns_topic_arn = string
   })
 }

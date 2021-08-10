@@ -33,10 +33,6 @@ variable "administrator_role_arn" {
   type = string
 }
 
-variable "hostedzone_id" {
-  type = string
-}
-
 variable "domain" {
   type = string
 }
@@ -103,10 +99,7 @@ variable "tooling" {
 
 variable "rds" {
   type = object({
-    subnet_group = object({
-      name = string
-    })
-    core_db = object({
+    core = object({
       allowed_security_group_ids = list(string)
       ssm_parameters = object({
         database_password = object({
@@ -162,43 +155,58 @@ variable "rds" {
   })
 }
 
-variable "application" {
+variable "ecs_cluster_name" {
+  type = string
+}
+
+variable "ecr_repositories" {
+  type = list(string)
+}
+
+variable "ecs_services" {
   type = object({
-    ecs_cluster_name = string
-    ecr_repositories = list(string)
-    ssm_parameter_prefix = string
-    service_discovery_namespace = string
-    services = object({
-      api_core = object({
-        env = string
-        ecs_task_definition = object({
-          name = string
-        })
-        alarm_threshold = object({
-          cpu_utilization    = string
-          memory_utilization = string
-        })
+    api_core = object({
+      env = string
+      ecs_task_definition = object({
+        name = string
       })
-      app_community = object({
-        env = string
-        ecs_task_definition = object({
-          name = string
-        })
-        ingress = object({
-          host = string
-          container_name = string
-          container_port = number
-        })
-        auth = object({
-          user_pool_domain = string
-        })
-        alarm_threshold = object({
-          cpu_utilization    = string
-          memory_utilization = string
-        })
+      desired_count = number
+      container = object({
+        name = string
+        port = number
+      })
+      alarm_thresholds = object({
+        cpu_utilization    = string
+        memory_utilization = string
       })
     })
-  })
+    app_community = object({
+      env = string
+      ecs_task_definition = object({
+        name = string
+      })
+      desired_count = number
+      dns = object({
+        external_host = string
+      })
+      container = object({
+        name = string
+        port = number
+      })
+      alarm_thresholds = object({
+        cpu_utilization    = string
+        memory_utilization = string
+      })
+    })
+  }) 
+}
+
+variable "ssm_parameter_prefix" {
+  type = string
+}
+
+variable "service_discovery_namespace" {
+  type = string
 }
 
 # variable "auth" {

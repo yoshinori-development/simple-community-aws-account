@@ -8,14 +8,10 @@ variable "tf" {
   })
 }
 
-locals {
-  name = "app"
+variable "hostedzone_id" {
+  type = string
 }
 
-variable "callback_urls" {
-  type = list(string)
-}
-
-variable "user_pool_domain" {
+variable "domain" {
   type = string
 }

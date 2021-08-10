@@ -3,7 +3,7 @@ data "aws_ecs_task_definition" "default" {
 }
 
 resource "aws_ecs_service" "default" {
-  name            = local.service_fullname
+  name            = local.service.fullname
   cluster         = var.ecs_cluster.arn
   task_definition = "${local.fullname}:${data.aws_ecs_task_definition.default.revision}"
   desired_count   = 1
@@ -34,25 +34,20 @@ resource "aws_ecs_service" "default" {
   }
 
   network_configuration {
-    subnets          = var.private_subnet.ids
+    subnets          = var.subnet.ids
     security_groups  = [aws_security_group.ecs_service.id]
     assign_public_ip = false
   }
 
   load_balancer {
-    target_group_arn = var.target_group_arn
-    container_name   = var.container.name
-    container_port   = var.container.port
+    target_group_arn = var.load_balancer.target_group_arn
+    container_name   = var.load_balancer.container.name
+    container_port   = var.load_balancer.container.port
   }
 }
 
 resource "aws_cloudwatch_log_group" "default" {
   name = "/aws/ecs/${local.fullname}"
-
-  tags = merge(
-    local.common_tags,
-    {}
-  )
 }
 
 resource "aws_security_group" "ecs_service" {
@@ -62,10 +57,10 @@ resource "aws_security_group" "ecs_service" {
 
   ingress {
     description     = "from alb"
-    from_port       = var.container.port
-    to_port         = var.container.port
+    from_port       = var.load_balancer.container.port
+    to_port         = var.load_balancer.container.port
     protocol        = "tcp"
-    security_groups = [var.alb_security_group_id]
+    security_groups = [var.load_balancer.security_group_id]
   }
 
   ingress {
@@ -73,7 +68,7 @@ resource "aws_security_group" "ecs_service" {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = var.private_subnet.cidr_blocks
+    cidr_blocks = var.subnet.cidr_blocks
   }
 
   egress {
@@ -82,13 +77,6 @@ resource "aws_security_group" "ecs_service" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = local.fullname
-    }
-  )
 }
 
 ## Task Role
@@ -108,13 +96,6 @@ resource "aws_iam_role" "service-task-role" {
   ]
 }
 EOF
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.fullname}-task-role"
-    }
-  )
 }
 
 # Task Policyが必要になったらここに記述
@@ -159,13 +140,6 @@ resource "aws_iam_role" "task-execution-role" {
   ]
 }
 EOF
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.fullname}-task-execution-role"
-    }
-  )
 }
 
 resource "aws_iam_role_policy_attachment" "AmazonECSTaskExecutionRolePolicy" {
@@ -200,40 +174,40 @@ resource "aws_iam_role_policy_attachment" "AmazonECSTaskExecutionRolePolicy" {
 
 
 # Cloudwatch Metric Alerms
-resource "aws_cloudwatch_metric_alarm" "cpu_utilization_too_high" {
-  alarm_name          = "${local.infra_fullname}_${local.service_fullname}_cpu_utilization_too_high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/ECS"
-  period              = "300"
-  statistic           = "Average"
-  threshold           = var.alarm_threshold.cpu_utilization
-  alarm_description   = "Average database CPU utilization too high"
-  alarm_actions       = [var.sns_topic_arn]
-  ok_actions          = [var.sns_topic_arn]
+# resource "aws_cloudwatch_metric_alarm" "cpu_utilization_too_high" {
+#   alarm_name          = "${local.infra_fullname}_${local.service_fullname}_cpu_utilization_too_high"
+#   comparison_operator = "GreaterThanThreshold"
+#   evaluation_periods  = "1"
+#   metric_name         = "CPUUtilization"
+#   namespace           = "AWS/ECS"
+#   period              = "300"
+#   statistic           = "Average"
+#   threshold           = var.alarm_threshold.cpu_utilization
+#   alarm_description   = "Average database CPU utilization too high"
+#   alarm_actions       = [var.sns_topic_arn]
+#   ok_actions          = [var.sns_topic_arn]
 
-  dimensions = {
-    ClusterName = var.ecs_cluster.name
-    ServiceName = local.service_fullname
-  }
-}
+#   dimensions = {
+#     ClusterName = var.ecs_cluster.name
+#     ServiceName = local.service_fullname
+#   }
+# }
 
-resource "aws_cloudwatch_metric_alarm" "memory_utilization_too_high" {
-  alarm_name          = "${local.infra_fullname}_${local.service_fullname}_memory_utilization_too_high"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "MemoryUtilization"
-  namespace           = "AWS/ECS"
-  period              = "300"
-  statistic           = "Average"
-  threshold           = var.alarm_threshold.memory_utilization
-  alarm_description   = "Average database Memory utilization too high"
-  alarm_actions       = [var.sns_topic_arn]
-  ok_actions          = [var.sns_topic_arn]
+# resource "aws_cloudwatch_metric_alarm" "memory_utilization_too_high" {
+#   alarm_name          = "${local.infra_fullname}_${local.service_fullname}_memory_utilization_too_high"
+#   comparison_operator = "GreaterThanThreshold"
+#   evaluation_periods  = "1"
+#   metric_name         = "MemoryUtilization"
+#   namespace           = "AWS/ECS"
+#   period              = "300"
+#   statistic           = "Average"
+#   threshold           = var.alarm_threshold.memory_utilization
+#   alarm_description   = "Average database Memory utilization too high"
+#   alarm_actions       = [var.sns_topic_arn]
+#   ok_actions          = [var.sns_topic_arn]
 
-  dimensions = {
-    ClusterName = var.ecs_cluster.name
-    ServiceName = local.service_fullname
-  }
-}
+#   dimensions = {
+#     ClusterName = var.ecs_cluster.name
+#     ServiceName = local.service_fullname
+#   }
+# }
