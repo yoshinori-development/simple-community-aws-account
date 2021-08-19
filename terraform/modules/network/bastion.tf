@@ -58,9 +58,6 @@ resource "aws_iam_role" "bastion" {
   ]
 }
 EOF
-  tags = {
-    Name = "bastion"
-  }
 }
 
 resource "aws_iam_role_policy_attachment" "bastion_attach_AmazonSSMManagedInstanceCore" {

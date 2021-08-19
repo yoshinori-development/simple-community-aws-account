@@ -63,9 +63,6 @@ resource "aws_iam_role" "tool" {
   ]
 }
 EOF
-  tags = {
-    Name = "tool"
-  }
 }
 
 resource "aws_iam_role_policy_attachment" "tool_attach_AmazonSSMManagedInstanceCore" {

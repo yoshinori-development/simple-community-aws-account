@@ -1,0 +1,30 @@
+# 本ファイルを複製して terraform.tf として保存してください。
+# 本ファイルには、S3バックエンドとAWSプロファイルを記述します。
+# 本ファイルをサンプルにしている理由は、S3バックエンドには変数が使用できず、
+# 本ファイル内にハードコードする必要があるため、結果的に実行環境固有の記述が必要になるためである。
+terraform {
+  required_version = ">= 1.0.4"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "3.54.0"
+    }
+  }
+  # backendに変数が使用できないためハードコード
+  backend "s3" {
+    bucket         = "ys-simple-community-tfstate"
+    region         = "ap-northeast-1"
+    profile        = "simple-community-prod" # ここを書き換える
+    key            = "simple-community/prod.tfstate"
+    dynamodb_table = "simple-community-tfstate-lock"
+    encrypt        = true
+  }
+}
+
+# tfvars等で指定したいところだが、上記のS3バックエンドにもAWSプロファイル名の指定が必要であり、
+# プロファイル名の記述を一箇所に纏めたいため、profile変数定義を本ファイルで合わせて記述している
+# profile変数のデフォルト値指定をそのまま使用している
+variable "profile" {
+  type = string
+  default = "simple-community-prod" # ここを書き換える
+}

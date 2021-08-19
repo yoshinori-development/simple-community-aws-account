@@ -103,14 +103,6 @@ resource "aws_service_discovery_private_dns_namespace" "private_dns" {
   vpc  = module.network.vpc.id
 }
 
-module "ecr" {
-  source = "../../modules/ecr"
-  tf = local.tf
-  administrator_role_arn = var.administrator_role_arn
-  deploy_user_arn = aws_iam_user.github_deployer.arn
-  ecr_repositories = var.ecr_repositories
-}
-
 resource "aws_ecs_cluster" "cluster" {
   name = var.ecs_cluster.name
   capacity_providers = var.ecs_cluster.capacity_providers
@@ -204,8 +196,8 @@ module "ecs_service_app_community" {
 #   source = "../../modules/healthcheck"
 
 #   infra = var.infra
-#   fqdn = "${var.hosts.app_tracker.prod}.${var.domain}"
-#   console_fqdn = "${var.hosts.app_console.prod}.${var.domain}"
+#   fqdn = "${var.hosts.app_tracker.develop}.${var.domain}"
+#   console_fqdn = "${var.hosts.app_console.develop}.${var.domain}"
 #   slack = {
 #     webhook_url = var.slack.webhook_url
 #     channel     = var.slack.channel

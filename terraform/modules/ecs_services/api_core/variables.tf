@@ -69,6 +69,15 @@ variable "ecs_task_definition" {
   })
 }
 
+variable "ecs_service" {
+  type = object({
+    capacity_provider_strategy = object({
+      capacity_provider = string
+      weight = number
+    })
+  })
+}
+
 variable "ssm_parameter_prefix" {
   type = string
 }

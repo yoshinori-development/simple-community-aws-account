@@ -1,3 +1,6 @@
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 data "aws_ecs_task_definition" "default" {
   task_definition = local.fullname
 }
@@ -5,23 +8,19 @@ data "aws_ecs_task_definition" "default" {
 resource "aws_ecs_service" "default" {
   name            = local.service.fullname
   cluster         = var.ecs_cluster.arn
-  task_definition = "${local.fullname}:${data.aws_ecs_task_definition.default.revision}"
-  desired_count   = 1
-
-  launch_type = "FARGATE"
-  # platform 1.4.0 には未対応 (VPCエンドポイントを設定する必要あり)
-  platform_version = "1.3.0"
+  task_definition = "${data.aws_ecs_task_definition.default.family}:${data.aws_ecs_task_definition.default.revision}"
+  desired_count   = var.desired_count
+  platform_version = "1.4.0"
   propagate_tags   = "SERVICE"
-
   health_check_grace_period_seconds = 120
-
-  # ordered_placement_strategy {
-  #   type  = "binpack"
-  #   field = "cpu"
-  # }
 
   deployment_controller {
     type = "ECS"
+  }
+
+  capacity_provider_strategy {
+    capacity_provider = var.ecs_service.capacity_provider_strategy.capacity_provider
+    weight = var.ecs_service.capacity_provider_strategy.weight
   }
 
   lifecycle {
@@ -80,7 +79,7 @@ resource "aws_security_group" "ecs_service" {
 }
 
 ## Task Role
-resource "aws_iam_role" "service-task-role" {
+resource "aws_iam_role" "task-role" {
   name               = "${local.fullname}-task-role"
   assume_role_policy = <<EOF
 {

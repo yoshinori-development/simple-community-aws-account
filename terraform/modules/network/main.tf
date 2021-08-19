@@ -6,7 +6,7 @@ resource "aws_vpc" "service" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name = "service"
+    Name = var.tf.fullname
   }
 }
 
@@ -16,7 +16,7 @@ resource "aws_subnet" "public-a" {
   availability_zone = "${data.aws_region.current.name}a"
   cidr_block        = var.subnets.public.a.cidr_block
   tags = {
-    Name = "public-a"
+    Name = "${var.tf.fullname}-public-a"
   }
 }
 
@@ -25,14 +25,14 @@ resource "aws_subnet" "public-c" {
   availability_zone = "${data.aws_region.current.name}c"
   cidr_block        = var.subnets.public.c.cidr_block
   tags = {
-    Name = "public-c"
+    Name = "${var.tf.fullname}-public-c"
   }
 }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.service.id
   tags = {
-    Name = "public"
+    Name = "${var.tf.fullname}-public"
   }
 
   route {
@@ -61,7 +61,7 @@ resource "aws_subnet" "application-a" {
   availability_zone = "${data.aws_region.current.name}a"
   cidr_block        = var.subnets.application.a.cidr_block
   tags = {
-    Name = "application-a"
+    Name = "${var.tf.fullname}-application-a"
   }
 }
 
@@ -70,20 +70,20 @@ resource "aws_subnet" "application-c" {
   availability_zone = "${data.aws_region.current.name}c"
   cidr_block        = var.subnets.application.c.cidr_block
   tags = {
-    Name = "application-c"
+    Name = "${var.tf.fullname}-application-c"
   }
 }
 
 resource "aws_route_table" "application" {
   vpc_id = aws_vpc.service.id
   tags = {
-    Name = "application"
+    Name = "${var.tf.fullname}-application"
   }
 
-  # route {
-  #   cidr_block  = "0.0.0.0/0"
-  #   instance_id = aws_instance.nat-a.id
-  # }
+  route {
+    cidr_block  = "0.0.0.0/0"
+    instance_id = aws_instance.nat-a.id
+  }
 }
 
 resource "aws_route_table_association" "application-a" {
@@ -103,7 +103,7 @@ resource "aws_subnet" "database-a" {
   availability_zone = "${data.aws_region.current.name}a"
   cidr_block        = var.subnets.database.a.cidr_block
   tags = {
-    Name = "database-a"
+    Name = "${var.tf.fullname}-database-a"
   }
 }
 
@@ -112,14 +112,14 @@ resource "aws_subnet" "database-c" {
   availability_zone = "${data.aws_region.current.name}c"
   cidr_block        = var.subnets.database.c.cidr_block
   tags = {
-    Name = "database-c"
+    Name = "${var.tf.fullname}-database-c"
   }
 }
 
 resource "aws_route_table" "database" {
   vpc_id = aws_vpc.service.id
   tags = {
-    Name = "database"
+    Name = "${var.tf.fullname}-database"
   }
 }
 
@@ -139,14 +139,14 @@ resource "aws_subnet" "tooling" {
   availability_zone = "${data.aws_region.current.name}a"
   cidr_block        = var.subnets.tooling.cidr_block
   tags = {
-    Name = "tooling"
+    Name = "${var.tf.fullname}-tooling"
   }
 }
 
 resource "aws_route_table" "tooling" {
   vpc_id = aws_vpc.service.id
   tags = {
-    Name = "tooling"
+    Name = "${var.tf.fullname}-tooling"
   }
 
   route {

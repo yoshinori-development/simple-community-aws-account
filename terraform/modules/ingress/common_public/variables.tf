@@ -38,23 +38,13 @@ variable "targets" {
   type = object({
     api_core = object({
       port = number
-      health_check = string
+      health_check_path = string
     })
     app_community = object({
       port = number
-      health_check = string
+      health_check_path = string
     })
   })
-  default = {
-    api_core = {
-      port = 8080
-      health_check = "/api/health"
-    }
-    app_community = {
-      port = 80
-      health_check = "/health"
-    }
-  }
 }
 
 variable "ssl_policy" {
@@ -63,5 +53,15 @@ variable "ssl_policy" {
 }
 
 variable "certificate_arn" {
+  type = string
+}
+
+variable "logging_bucket" {
+  type = object({
+    id = string
+  })
+}
+
+variable "logging_bucket_prefix" {
   type = string
 }

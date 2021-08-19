@@ -3,10 +3,10 @@ data "aws_region" "current" {}
 
 # 特定サービスのみへ権限を付与可能なキーポリシーについては以下参照
 # https://docs.aws.amazon.com/kms/latest/developerguide/policy-conditions.html#conditions-kms-via-service
-resource "aws_kms_alias" "parameter_encription" {
-  name          = "alias/${var.tf.fullname}/ssm-parameter"
-  target_key_id = aws_kms_key.parameter_encription.key_id
-}
+# resource "aws_kms_alias" "parameter_encription" {
+#   name          = "alias/${var.tf.fullname}/ssm-parameter"
+#   target_key_id = aws_kms_key.parameter_encription.key_id
+# }
 
 resource "aws_kms_key" "parameter_encription" {
   description             = "Ssm parameter encryption key"
@@ -55,10 +55,10 @@ EOF
 # https://docs.aws.amazon.com/kms/latest/developerguide/policy-conditions.html#conditions-kms-via-service
 # Cloudwatch logsへ付与する権限は以下参照
 # https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html
-resource "aws_kms_alias" "session_manager_encription" {
-  name          = "alias/${var.tf.fullname}/ssm-session-manager"
-  target_key_id = aws_kms_key.session_manager_encription.key_id
-}
+# resource "aws_kms_alias" "session_manager_encription" {
+#   name          = "alias/${var.tf.fullname}/ssm-session-manager"
+#   target_key_id = aws_kms_key.session_manager_encription.key_id
+# }
 
 resource "aws_kms_key" "session_manager_encription" {
   description             = "Ssm session manager encryption key"
@@ -164,7 +164,7 @@ resource "aws_iam_policy" "session-manager" {
       "Action": [
         "s3:PutObject"
       ],
-      "Resource": "${var.logging_bucket.bucket.arn}/session-manager/*"
+      "Resource": "${var.logging_bucket.arn}/session-manager/*"
     },
     {
       "Effect": "Allow",

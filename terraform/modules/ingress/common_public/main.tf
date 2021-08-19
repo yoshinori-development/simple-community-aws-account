@@ -11,11 +11,11 @@ resource "aws_lb" "common-public" {
   load_balancer_type         = "application"
   security_groups            = [aws_security_group.common-public.id]
   subnets                    = var.subnet.ids
-  enable_deletion_protection = false
+  enable_deletion_protection = false # TODO: 本稼働時はtrueにする
 
   access_logs {
-    bucket  = aws_s3_bucket.alb_logs.bucket
-    prefix  = "${local.alb_name}/"
+    bucket  = var.logging_bucket.id
+    prefix  = var.logging_bucket_prefix
     enabled = true
   }
 }
@@ -141,45 +141,33 @@ resource "aws_lb_listener_rule" "common-public-forward-api-core" {
 }
 
 resource "aws_lb_target_group" "common-public-app-community" {
-  name        = "${var.tf.shortname}-app-community"
+  name        = "${var.tf.fullshortname}-app-community"
   port        = var.targets.app_community.port
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = var.vpc.id
   health_check {
-    path = var.targets.app_community.health_check
+    path = var.targets.app_community.health_check_path
     port = var.targets.app_community.port
   }
 }
 
 resource "aws_lb_target_group" "common-public-api-core" {
-  name        = "${var.tf.fullname}-api-core"
+  name        = "${var.tf.fullshortname}-api-core"
   port        = var.targets.api_core.port
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = var.vpc.id
   health_check {
-    path = var.targets.api_core.health_check
+    path = var.targets.api_core.health_check_path
     port = var.targets.api_core.port
   }
 }
 
 # Route53
-resource "aws_route53_record" "common-public-a-record" {
-  zone_id = var.hostedzone_id
-  name    = var.hosts.app_community == "" ? var.domain : "${var.hosts.app_community}.${var.domain}"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.common-public.dns_name
-    zone_id                = aws_lb.common-public.zone_id
-    evaluate_target_health = true
-  }
-}
-
-# resource "aws_route53_record" "a-record-console" {
+# resource "aws_route53_record" "common-public-a-record" {
 #   zone_id = var.hostedzone_id
-#   name    = "${var.hosts.console}.${var.domain}"
+#   name    = var.hosts.app_community == "" ? var.domain : "${var.hosts.app_community}.${var.domain}"
 #   type    = "A"
 
 #   alias {
@@ -189,30 +177,3 @@ resource "aws_route53_record" "common-public-a-record" {
 #   }
 # }
 
-# Access log bucket
-resource "aws_s3_bucket" "alb_logs" {
-  bucket = "${var.tf.fullname}-alb-logs"
-  acl    = "private"
-
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "alb_logs" {
-  bucket = aws_s3_bucket.alb_logs.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::"${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.alb_logs.id}/*"
-    }
-  ]
-}
-POLICY
-}

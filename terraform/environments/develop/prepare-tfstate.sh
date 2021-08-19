@@ -7,8 +7,8 @@ SCRIPT_DIR=$(cd $(dirname $0); pwd)
 cd $SCRIPT_DIR
 
 export AWS_DEFAULT_REGION=ap-northeast-1
-bucket_name=ys-community-tfstate
-dynamodb_table=community-tfstate-lock
+bucket_name=ys-simple-community-tfstate
+dynamodb_table=simple-community-tfstate-lock
 
 aws s3api create-bucket \
   --create-bucket-configuration LocationConstraint=$AWS_DEFAULT_REGION \

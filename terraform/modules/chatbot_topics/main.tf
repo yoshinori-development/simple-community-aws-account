@@ -75,10 +75,10 @@ resource "aws_sns_topic_subscription" "notification" {
 # https://docs.aws.amazon.com/kms/latest/developerguide/policy-conditions.html#conditions-kms-via-service
 # トピックに必要な権限は以下参照
 # https://docs.aws.amazon.com/ja_jp/sns/latest/dg/sns-key-management.html
-resource "aws_kms_alias" "topic_encription" {
-  name          = "alias/${var.tf.fullname}/topic"
-  target_key_id = aws_kms_key.topic_encription.key_id
-}
+# resource "aws_kms_alias" "topic_encription" {
+#   name          = "alias/${var.tf.fullname}/topic"
+#   target_key_id = aws_kms_key.topic_encription.key_id
+# }
 
 resource "aws_kms_key" "topic_encription" {
   description             = "Notification topic encryption key"

@@ -178,10 +178,10 @@ resource "aws_ssm_parameter" "core_password" {
 # https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/Overview.Encryption.Keys.html
 # パフォーマンスインサイトに必要な権限は以下参照
 # https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/USER_PerfInsights.access-control.html#USER_PerfInsights.access-control.cmk-policy
-resource "aws_kms_alias" "core" {
-  name          = "alias/${var.tf.fullname}/rds-core"
-  target_key_id = aws_kms_key.core.key_id
-}
+# resource "aws_kms_alias" "core" {
+#   name          = "alias/${var.tf.fullname}/rds-core"
+#   target_key_id = aws_kms_key.core.key_id
+# }
 
 resource "aws_kms_key" "core" {
   description             = "RDS core encryption key"

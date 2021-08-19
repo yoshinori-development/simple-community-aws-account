@@ -2,3 +2,4 @@
 !/*/key_pairs/*.pub
 profile.tfvars.hcl
 local.tfbackend
+terraform.tf

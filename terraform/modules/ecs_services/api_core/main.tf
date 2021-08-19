@@ -10,13 +10,17 @@ resource "aws_ecs_service" "default" {
   cluster         = var.ecs_cluster.arn
   task_definition = "${data.aws_ecs_task_definition.default.family}:${data.aws_ecs_task_definition.default.revision}"
   desired_count   = var.desired_count
-  launch_type = "FARGATE"
   platform_version = "1.4.0"
   propagate_tags   = "SERVICE"
   health_check_grace_period_seconds = 120
 
   deployment_controller {
     type = "ECS"
+  }
+
+  capacity_provider_strategy {
+    capacity_provider = var.ecs_service.capacity_provider_strategy.capacity_provider
+    weight = var.ecs_service.capacity_provider_strategy.weight
   }
 
   lifecycle {

@@ -8,4 +8,6 @@
 # .tfvars files
 *.tfvars
 
+aws_profile
+
 **/key_pairs/*

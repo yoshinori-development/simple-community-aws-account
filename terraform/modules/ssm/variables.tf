@@ -18,11 +18,6 @@ variable "allow_session_manager_role_arns" {
 
 variable "logging_bucket" {
   type = object({
-    bucket = object({
-      arn = string
-    })
-    kms_key = object({
-      arn = string
-    })
+    arn = string
   })
 }

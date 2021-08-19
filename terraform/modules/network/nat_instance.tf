@@ -49,9 +49,6 @@ resource "aws_iam_role" "nat" {
   ]
 }
 EOF
-  tags = {
-    Name = "nat_instance"
-  }
 }
 
 resource "aws_iam_role_policy_attachment" "nat_instance_attach_AmazonSSMManagedInstanceCore" {
