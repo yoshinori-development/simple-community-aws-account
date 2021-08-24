@@ -4,8 +4,7 @@ data "aws_region" "current" {}
 resource "aws_cloudwatch_event_rule" "stop-resources" {
   name        = "${var.tf.fullname}-stop-resources"
   description = "Stop resources for development"
-  # schedule_expression = cron(0 15 * * ? *)
-  schedule_expression = "cron(*/5 * * * ? *)"
+  schedule_expression = "cron(0 15 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "stop-resources" {
