@@ -1,24 +1,50 @@
 resource "aws_instance" "nat-a" {
-  ami           = var.nat_instance.ami
-  instance_type = var.nat_instance.instance_type
-  subnet_id     = aws_subnet.public-a.id
+  ami                         = var.nat_instance.ami
+  instance_type               = var.nat_instance.instance_type
+  subnet_id                   = aws_subnet.public-a.id
   associate_public_ip_address = true
-  iam_instance_profile = aws_iam_instance_profile.nat.id
-  vpc_security_group_ids = [aws_security_group.nat_instance.id]
-  key_name               = aws_key_pair.nat_instance.key_name
-  source_dest_check = false
+  iam_instance_profile        = aws_iam_instance_profile.nat.id
+  vpc_security_group_ids      = [aws_security_group.nat_instance.id]
+  key_name                    = aws_key_pair.nat_instance.key_name
+  source_dest_check           = false
   tags = {
-    Name = "nat-instance-a"
+    Name               = "nat-instance-a"
     AllowSessionManger = true
   }
 }
 
 resource "aws_eip" "nat-instance-a" {
-  vpc = true
-  instance = aws_instance.nat-a.id
+  vpc        = true
+  instance   = aws_instance.nat-a.id
   depends_on = [aws_internet_gateway.gw]
   tags = {
     Name = "nat-instance-a"
+  }
+}
+
+resource "aws_instance" "nat-c" {
+  count = var.multi_az ? 1 : 0
+  ami                         = var.nat_instance.ami
+  instance_type               = var.nat_instance.instance_type
+  subnet_id                   = aws_subnet.public-c.id
+  associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.nat.id
+  vpc_security_group_ids      = [aws_security_group.nat_instance.id]
+  key_name                    = aws_key_pair.nat_instance.key_name
+  source_dest_check           = false
+  tags = {
+    Name               = "nat-instance-c"
+    AllowSessionManger = true
+  }
+}
+
+resource "aws_eip" "nat-instance-c" {
+  count = var.multi_az ? 1 : 0
+  vpc        = true
+  instance   = aws_instance.nat-c[0].id
+  depends_on = [aws_internet_gateway.gw]
+  tags = {
+    Name = "nat-instance-c"
   }
 }
 
@@ -33,8 +59,8 @@ resource "aws_iam_instance_profile" "nat" {
 }
 
 resource "aws_iam_role" "nat" {
-  name = "${var.tf.fullname}-nat_instance"
-  path = "/"
+  name               = "${var.tf.fullname}-nat_instance"
+  path               = "/"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

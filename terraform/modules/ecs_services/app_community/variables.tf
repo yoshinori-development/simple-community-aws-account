@@ -48,12 +48,12 @@ variable "desired_count" {
 variable "load_balancer" {
   type = object({
     security_group_id = string
-    target_group_arn = string
+    target_group_arn  = string
     container = object({
       name = string
       port = number
     })
-  }) 
+  })
 }
 
 variable "ecs_cluster" {
@@ -73,7 +73,7 @@ variable "ecs_service" {
   type = object({
     capacity_provider_strategy = object({
       capacity_provider = string
-      weight = number
+      weight            = number
     })
   })
 }

@@ -48,7 +48,7 @@ variable "subnets" {
 
 variable "nat_instance" {
   type = object({
-    ami = string
+    ami           = string
     instance_type = string
   })
 }
@@ -56,7 +56,7 @@ variable "nat_instance" {
 variable "bastion" {
   type = object({
     ami_name_filter = string
-    instance_type = string
+    instance_type   = string
   })
 }
 
@@ -64,4 +64,9 @@ variable "session_manager_policy" {
   type = object({
     arn = string
   })
+}
+
+
+variable "multi_az" {
+  type = bool
 }

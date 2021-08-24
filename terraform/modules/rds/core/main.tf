@@ -156,7 +156,7 @@ resource "aws_db_instance" "core" {
   backup_window                       = var.db_instance.backup_window
   maintenance_window                  = var.db_instance.maintenance_window
   enabled_cloudwatch_logs_exports     = var.db_instance.enabled_cloudwatch_logs_exports
-  final_snapshot_identifier = "${var.tf.fullname}-${formatdate("YYYY-mm-DD", timestamp())}"
+  final_snapshot_identifier           = "${var.tf.fullname}-${formatdate("YYYY-mm-DD", timestamp())}"
 }
 
 resource "random_password" "core" {
@@ -186,8 +186,8 @@ resource "aws_ssm_parameter" "core_password" {
 resource "aws_kms_key" "core" {
   description             = "RDS core encryption key"
   deletion_window_in_days = 7
-  enable_key_rotation = true
-  policy = <<EOF
+  enable_key_rotation     = true
+  policy                  = <<EOF
 {
   "Id": "key-policy",
   "Version": "2012-10-17",

@@ -2,8 +2,8 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_ecr_repository" "repositories" {
-  for_each             = toset(var.ecr_repositories)
-  name                 = each.key
+  for_each = toset(var.ecr_repositories)
+  name     = each.key
   encryption_configuration {
     encryption_type = "KMS"
     kms_key         = aws_kms_key.encription.arn
@@ -24,8 +24,8 @@ resource "aws_ecr_repository" "repositories" {
 resource "aws_kms_key" "encription" {
   description             = "ECR repository encryption key"
   deletion_window_in_days = 7
-  enable_key_rotation = true
-  policy = <<EOF
+  enable_key_rotation     = true
+  policy                  = <<EOF
 {
   "Id": "key-policy",
   "Version": "2012-10-17",

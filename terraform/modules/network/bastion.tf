@@ -1,6 +1,6 @@
 data "aws_ami" "bastion" {
-  most_recent      = true
-  owners           = ["amazon"]
+  most_recent = true
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -19,14 +19,14 @@ data "aws_ami" "bastion" {
 }
 
 resource "aws_instance" "bastion" {
-  ami           = data.aws_ami.bastion.image_id
-  instance_type = var.bastion.instance_type
-  subnet_id     = aws_subnet.tooling.id
-  iam_instance_profile = aws_iam_instance_profile.bastion.id
+  ami                    = data.aws_ami.bastion.image_id
+  instance_type          = var.bastion.instance_type
+  subnet_id              = aws_subnet.tooling.id
+  iam_instance_profile   = aws_iam_instance_profile.bastion.id
   vpc_security_group_ids = [aws_security_group.bastion.id]
   key_name               = aws_key_pair.bastion.key_name
   tags = {
-    Name = "bastion"
+    Name               = "bastion"
     AllowSessionManger = true
   }
 }
@@ -42,8 +42,8 @@ resource "aws_iam_instance_profile" "bastion" {
 }
 
 resource "aws_iam_role" "bastion" {
-  name = "${var.tf.fullname}-bastion"
-  path = "/"
+  name               = "${var.tf.fullname}-bastion"
+  path               = "/"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

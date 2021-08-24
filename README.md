@@ -21,3 +21,9 @@ terraform plan
 ```
 terraform apply
 ```
+
+
+## プロバイダの更新時
+```
+terraform init -upgrade
+```

@@ -11,7 +11,7 @@ variable "tf" {
 variable "vpc" {
   type = object({
     id = string
-  }) 
+  })
 }
 
 variable "subnet" {
@@ -28,32 +28,40 @@ variable "domain" {
   type = string
 }
 
-variable "hosts" {
+variable "fqdn" {
   type = object({
     app_community = string
-  }) 
+  })
 }
 
 variable "targets" {
   type = object({
     api_core = object({
-      port = number
+      port              = number
       health_check_path = string
     })
     app_community = object({
-      port = number
+      port              = number
       health_check_path = string
     })
   })
 }
 
 variable "ssl_policy" {
-  type = string
+  type    = string
   default = "ELBSecurityPolicy-FS-1-2-Res-2020-10"
 }
 
 variable "certificate_arn" {
   type = string
+}
+
+variable "cognito" {
+  type = object({
+    user_pool_arn = string
+    user_pool_client_id = string
+    user_pool_domain = string
+  })
 }
 
 variable "logging_bucket" {

@@ -86,17 +86,16 @@ resource "aws_lb_listener_rule" "common-public-forward-app-community" {
   listener_arn = aws_lb_listener.common-public-listener.arn
   priority     = 100
 
-  # action {
-  #   type = "authenticate-cognito"
-  #   authenticate_cognito {
-  #     scope                      = "openid email"
-  #     on_unauthenticated_request = "authenticate"
-  #     # session_timeout = 100000
-  #     user_pool_arn       = var.auth_console.user_pool_arn
-  #     user_pool_client_id = var.auth_console.user_pool_client_id
-  #     user_pool_domain    = var.auth_console.user_pool_domain
-  #   }
-  # }
+  action {
+    type = "authenticate-cognito"
+    authenticate_cognito {
+      scope                      = "openid email"
+      on_unauthenticated_request = "allow"
+      user_pool_arn       = var.cognito.user_pool_arn
+      user_pool_client_id = var.cognito.user_pool_client_id
+      user_pool_domain    = var.cognito.user_pool_domain
+    }
+  }
 
   action {
     type             = "forward"
@@ -106,7 +105,7 @@ resource "aws_lb_listener_rule" "common-public-forward-app-community" {
   condition {
     host_header {
       values = [
-        var.hosts.app_community == "" ? var.domain : "${var.hosts.app_community}.${var.domain}"
+        var.fqdn.app_community
       ]
     }
   }
@@ -122,6 +121,17 @@ resource "aws_lb_listener_rule" "common-public-forward-api-core" {
   priority     = 500
 
   action {
+    type = "authenticate-cognito"
+    authenticate_cognito {
+      scope                      = "openid email"
+      on_unauthenticated_request = "allow"
+      user_pool_arn       = var.cognito.user_pool_arn
+      user_pool_client_id = var.cognito.user_pool_client_id
+      user_pool_domain    = var.cognito.user_pool_domain
+    }
+  }
+  
+  action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.common-public-api-core.arn
   }
@@ -129,7 +139,7 @@ resource "aws_lb_listener_rule" "common-public-forward-api-core" {
   condition {
     host_header {
       values = [
-        var.hosts.app_community == "" ? var.domain : "${var.hosts.app_community}.${var.domain}"
+        var.fqdn.app_community
       ]
     }
   }
@@ -165,15 +175,14 @@ resource "aws_lb_target_group" "common-public-api-core" {
 }
 
 # Route53
-# resource "aws_route53_record" "common-public-a-record" {
-#   zone_id = var.hostedzone_id
-#   name    = var.hosts.app_community == "" ? var.domain : "${var.hosts.app_community}.${var.domain}"
-#   type    = "A"
+resource "aws_route53_record" "common-public-a-record" {
+  zone_id = var.hostedzone_id
+  name    = var.fqdn.app_community
+  type    = "A"
 
-#   alias {
-#     name                   = aws_lb.common-public.dns_name
-#     zone_id                = aws_lb.common-public.zone_id
-#     evaluate_target_health = true
-#   }
-# }
-
+  alias {
+    name                   = aws_lb.common-public.dns_name
+    zone_id                = aws_lb.common-public.zone_id
+    evaluate_target_health = true
+  }
+}

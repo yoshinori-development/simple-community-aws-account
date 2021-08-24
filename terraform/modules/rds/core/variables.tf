@@ -68,20 +68,20 @@ variable "db_instance" {
 variable "alarm" {
   type = object({
     thresholds = object({
-      cpu_utilization = string
-      cpu_credit_balance = string
-      free_storage_space = string
-      freeable_memory = string
-      swap_usage = string
-      connections = string
-      burst_balance = string
-      ebs_io_balance = string
-      ebs_byte_balance = string
-      read_iops = string
-      write_iops = string
-      read_throughtput = string
-      write_throughtput = string
-      network_receive_throughtput = string
+      cpu_utilization              = string
+      cpu_credit_balance           = string
+      free_storage_space           = string
+      freeable_memory              = string
+      swap_usage                   = string
+      connections                  = string
+      burst_balance                = string
+      ebs_io_balance               = string
+      ebs_byte_balance             = string
+      read_iops                    = string
+      write_iops                   = string
+      read_throughtput             = string
+      write_throughtput            = string
+      network_receive_throughtput  = string
       network_transmit_throughtput = string
     })
     # sns_topic_arn = string

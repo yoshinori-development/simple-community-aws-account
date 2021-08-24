@@ -6,12 +6,12 @@ data "aws_ecs_task_definition" "default" {
 }
 
 resource "aws_ecs_service" "default" {
-  name            = local.service.fullname
-  cluster         = var.ecs_cluster.arn
-  task_definition = "${data.aws_ecs_task_definition.default.family}:${data.aws_ecs_task_definition.default.revision}"
-  desired_count   = var.desired_count
-  platform_version = "1.4.0"
-  propagate_tags   = "SERVICE"
+  name                              = local.service.fullname
+  cluster                           = var.ecs_cluster.arn
+  task_definition                   = "${data.aws_ecs_task_definition.default.family}:${data.aws_ecs_task_definition.default.revision}"
+  desired_count                     = var.desired_count
+  platform_version                  = "1.4.0"
+  propagate_tags                    = "SERVICE"
   health_check_grace_period_seconds = 120
 
   deployment_controller {
@@ -20,7 +20,7 @@ resource "aws_ecs_service" "default" {
 
   capacity_provider_strategy {
     capacity_provider = var.ecs_service.capacity_provider_strategy.capacity_provider
-    weight = var.ecs_service.capacity_provider_strategy.weight
+    weight            = var.ecs_service.capacity_provider_strategy.weight
   }
 
   lifecycle {

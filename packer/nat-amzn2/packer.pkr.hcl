@@ -12,6 +12,10 @@ variable "region" {
   default = "ap-northeast-1"
 }
 
+variable "profile" {
+  type    = string
+}
+
 variable "instance_type" {
   type    = string
   default = "t4g.micro"
@@ -24,6 +28,7 @@ locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 # post-processors on an instance created by the source.
 source "amazon-ebs" "latest_amazon_linux_2" {
   region        = "${var.region}"
+  profile       = "${var.profile}"
   instance_type = "${var.instance_type}"
   ami_name      = "${var.ami_name} ${local.timestamp}"
   source_ami_filter {

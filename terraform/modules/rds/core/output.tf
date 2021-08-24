@@ -5,3 +5,7 @@ output "subnet_group_id" {
 output "encryption_kms_key_id" {
   value = aws_kms_key.core.key_id
 }
+
+output "rds_instance_id" {
+  value = aws_db_instance.core.id
+}

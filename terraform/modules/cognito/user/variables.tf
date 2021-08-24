@@ -8,9 +8,10 @@ variable "tf" {
   })
 }
 
-variable "app" {
-  type = object({
-    callback_urls = list(string)
-    user_pool_domain = string
-  })
+variable "callback_urls" {
+  type = list(string)
+}
+
+variable "user_pool_domain" {
+  type = string
 }

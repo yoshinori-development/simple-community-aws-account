@@ -2,14 +2,14 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 module "chatbot-topics" {
-  source  = "../../modules/chatbot_topics"
-  tf      = local.tf
+  source                 = "../../modules/chatbot_topics"
+  tf                     = local.tf
   administrator_role_arn = var.administrator_role_arn
 }
 
 module "ssm" {
-  source  = "../../modules/ssm"
-  tf      = local.tf
+  source                 = "../../modules/ssm"
+  tf                     = local.tf
   administrator_role_arn = var.administrator_role_arn
   allow_session_manager_role_arns = concat(var.ssm.allow_session_manager_role_arns, [
     module.network.bastion_instance_role.arn,
@@ -20,8 +20,8 @@ module "ssm" {
 }
 
 module "logging_bucket" {
-  source  = "../../modules/logging_bucket"
-  tf      = local.tf
+  source                 = "../../modules/logging_bucket"
+  tf                     = local.tf
   administrator_role_arn = var.administrator_role_arn
   allow_put_log_role_arns = [
     module.network.bastion_instance_role.arn,
@@ -31,70 +31,70 @@ module "logging_bucket" {
 }
 
 module "network" {
-  source  = "../../modules/network"
-  tf      = local.tf
-  vpc     = var.network.vpc
-  subnets = var.network.subnets
-  nat_instance = var.network.nat_instance
-  bastion = var.network.bastion
+  source                 = "../../modules/network"
+  tf                     = local.tf
+  vpc                    = var.network.vpc
+  subnets                = var.network.subnets
+  nat_instance           = var.network.nat_instance
+  bastion                = var.network.bastion
   session_manager_policy = module.ssm.session_manager_policy
 }
 
 module "tooling" {
-  source  = "../../modules/tooling"
-  tf      = local.tf
-  vpc     = module.network.vpc
-  subnet = module.network.subnet-tooling
-  instance = var.tooling.instance
+  source                 = "../../modules/tooling"
+  tf                     = local.tf
+  vpc                    = module.network.vpc
+  subnet                 = module.network.subnet-tooling
+  instance               = var.tooling.instance
   session_manager_policy = module.ssm.session_manager_policy
 }
 
 module "rds_core" {
-  source            = "../../modules/rds/core"
-  tf                = local.tf
-  administrator_role_arn = var.administrator_role_arn
-  vpc     = module.network.vpc
-  subnet_ids = module.network.subnet-database-ids
+  source                     = "../../modules/rds/core"
+  tf                         = local.tf
+  administrator_role_arn     = var.administrator_role_arn
+  vpc                        = module.network.vpc
+  subnet_ids                 = module.network.subnet-database-ids
   allowed_security_group_ids = var.rds.core.allowed_security_group_ids
   ssm = {
     parameters = var.rds.core.ssm_parameters
     kms_key_id = module.ssm.kms_key.id
   }
   db_instance = var.rds.core.db_instance
-  alarm = var.rds.core.alarm
+  alarm       = var.rds.core.alarm
 }
 
 module "acm" {
-  source = "../../modules/acm"
-  tf = local.tf
-  hostedzone_id   = var.hostedzone_id
-  domain          = var.domain
+  source        = "../../modules/acm"
+  tf            = local.tf
+  hostedzone_id = var.hostedzone_id
+  domain        = var.domain
 }
 
 module "ingress_common_public" {
   source = "../../modules/ingress/common_public"
-  tf                = local.tf
-  vpc     = module.network.vpc
+  tf     = local.tf
+  vpc    = module.network.vpc
   subnet = {
     ids = module.network.subnet-public-ids
   }
-  hostedzone_id   = var.hostedzone_id
-  domain          = var.domain
+  hostedzone_id = var.hostedzone_id
+  domain        = var.domain
   hosts = {
     app_community = var.ecs_services.app_community.dns.external_host
   }
   targets = {
     api_core = {
-      port = var.ecs_services.api_core.container.port
+      port              = var.ecs_services.api_core.container.port
       health_check_path = var.ecs_services.api_core.health_check_pach
     }
     app_community = {
-      port = var.ecs_services.app_community.container.port
+      port              = var.ecs_services.app_community.container.port
       health_check_path = var.ecs_services.app_community.health_check_pach
     }
   }
-  certificate_arn = module.acm.current_region_certificate_arn
-  logging_bucket = module.logging_bucket.bucket
+  certificate_arn       = module.acm.current_region_certificate_arn
+  logging_bucket        = module.logging_bucket.bucket
   logging_bucket_prefix = module.logging_bucket.prefix_alb
 }
 
@@ -104,25 +104,25 @@ resource "aws_service_discovery_private_dns_namespace" "private_dns" {
 }
 
 module "ecr" {
-  source = "../../modules/ecr"
-  tf = local.tf
+  source                 = "../../modules/ecr"
+  tf                     = local.tf
   administrator_role_arn = var.administrator_role_arn
-  deploy_user_arn = aws_iam_user.github_deployer.arn
-  ecr_repositories = var.ecr_repositories
+  deploy_user_arn        = aws_iam_user.github_deployer.arn
+  ecr_repositories       = var.ecr_repositories
 }
 
 resource "aws_ecs_cluster" "cluster" {
-  name = var.ecs_cluster.name
+  name               = var.ecs_cluster.name
   capacity_providers = var.ecs_cluster.capacity_providers
 }
 
 module "ecs_service_api_core" {
   source = "../../modules/ecs_services/api_core"
-  tf = local.tf
+  tf     = local.tf
   service = {
-    name = "api-core"
+    name      = "api-core"
     shortname = "ac"
-    env  = ""
+    env       = ""
   }
   vpc = module.network.vpc
   subnet = {
@@ -135,8 +135,8 @@ module "ecs_service_api_core" {
   desired_count = var.ecs_services.api_core.desired_count
   load_balancer = {
     security_group_id = module.ingress_common_public.security_group_id
-    target_group_arn = module.ingress_common_public.target_group_api_core_arn
-    container = var.ecs_services.api_core.container
+    target_group_arn  = module.ingress_common_public.target_group_api_core_arn
+    container         = var.ecs_services.api_core.container
   }
   ecs_cluster = {
     arn  = aws_ecs_cluster.cluster.arn
@@ -146,7 +146,7 @@ module "ecs_service_api_core" {
   ecs_service = {
     capacity_provider_strategy = {
       capacity_provider = var.ecs_services.api_core.capacity_provider_strategy.capacity_provider
-      weight = var.ecs_services.api_core.capacity_provider_strategy.weight 
+      weight            = var.ecs_services.api_core.capacity_provider_strategy.weight
     }
   }
   ssm_parameter_prefix = var.ssm_parameter_prefix
@@ -162,11 +162,11 @@ module "ecs_service_api_core" {
 
 module "ecs_service_app_community" {
   source = "../../modules/ecs_services/app_community"
-  tf = local.tf
+  tf     = local.tf
   service = {
-    name = "app-community"
+    name      = "app-community"
     shortname = "com"
-    env  = ""
+    env       = ""
   }
   vpc = module.network.vpc
   subnet = {
@@ -179,8 +179,8 @@ module "ecs_service_app_community" {
   desired_count = var.ecs_services.app_community.desired_count
   load_balancer = {
     security_group_id = module.ingress_common_public.security_group_id
-    target_group_arn = module.ingress_common_public.target_group_app_community_arn
-    container = var.ecs_services.app_community.container
+    target_group_arn  = module.ingress_common_public.target_group_app_community_arn
+    container         = var.ecs_services.app_community.container
   }
   ecs_cluster = {
     arn  = aws_ecs_cluster.cluster.arn
@@ -190,7 +190,7 @@ module "ecs_service_app_community" {
   ecs_service = {
     capacity_provider_strategy = {
       capacity_provider = var.ecs_services.app_community.capacity_provider_strategy.capacity_provider
-      weight = var.ecs_services.app_community.capacity_provider_strategy.weight 
+      weight            = var.ecs_services.app_community.capacity_provider_strategy.weight
     }
   }
   alarm_thresholds = var.ecs_services.app_community.alarm_thresholds
@@ -223,10 +223,10 @@ resource "aws_iam_user_policy" "github_deployer" {
   user = aws_iam_user.github_deployer.name
 
   policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
+    "Version" : "2012-10-17",
+    "Statement" : [
       {
-        "Action": [
+        "Action" : [
           "ecr:GetAuthorizationToken",
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
@@ -239,52 +239,52 @@ resource "aws_iam_user_policy" "github_deployer" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:ListImages"
         ],
-        "Effect": "Allow",
-        "Resource": [
+        "Effect" : "Allow",
+        "Resource" : [
           "*"
         ]
       },
       {
-        "Action": [
+        "Action" : [
           "kms:*"
         ],
-        "Effect": "Allow",
-        "Resource": [
+        "Effect" : "Allow",
+        "Resource" : [
           "*"
         ]
       },
       {
-         "Sid":"RegisterTaskDefinition",
-         "Effect":"Allow",
-         "Action":[
-            "ecs:RegisterTaskDefinition"
-         ],
-         "Resource":"*"
+        "Sid" : "RegisterTaskDefinition",
+        "Effect" : "Allow",
+        "Action" : [
+          "ecs:RegisterTaskDefinition"
+        ],
+        "Resource" : "*"
       },
       {
-         "Sid":"PassRolesInTaskDefinition",
-         "Effect":"Allow",
-         "Action":[
-            "iam:PassRole"
-         ],
-         "Resource":[
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ecs_service_api_core.task-role.name}",
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ecs_service_api_core.task-execution-role.name}",
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ecs_service_app_community.task-role.name}",
-            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ecs_service_app_community.task-execution-role.name}"
-         ]
+        "Sid" : "PassRolesInTaskDefinition",
+        "Effect" : "Allow",
+        "Action" : [
+          "iam:PassRole"
+        ],
+        "Resource" : [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ecs_service_api_core.task-role.name}",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ecs_service_api_core.task-execution-role.name}",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ecs_service_app_community.task-role.name}",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ecs_service_app_community.task-execution-role.name}"
+        ]
       },
       {
-         "Sid":"DeployService",
-         "Effect":"Allow",
-         "Action":[
-            "ecs:UpdateService",
-            "ecs:DescribeServices"
-         ],
-         "Resource":[
-            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.ecs_cluster.name}/api-core",
-            "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.ecs_cluster.name}/app-community"
-         ]
+        "Sid" : "DeployService",
+        "Effect" : "Allow",
+        "Action" : [
+          "ecs:UpdateService",
+          "ecs:DescribeServices"
+        ],
+        "Resource" : [
+          "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.ecs_cluster.name}/api-core",
+          "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.ecs_cluster.name}/app-community"
+        ]
       }
     ]
   })

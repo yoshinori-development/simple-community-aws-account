@@ -30,6 +30,19 @@ module "logging_bucket" {
   ]
 }
 
+module "start_stop_resources" {
+  source  = "../../modules/start_stop_resources"
+  tf      = local.tf
+  ec2_tooling_id = module.tooling.instance_id
+  ec2_nat_id = module.network.nat_instance_a_id
+  ec2_bastion_id = module.network.bastion_instance_id
+  rds_core_id = module.rds_core.rds_instance_id
+  rds_core_name = var.rds.core.db_instance.identifier
+  ecs_cluster_name = var.ecs_cluster.name
+  ecs_service_api_core_name = "api-core"
+  ecs_service_app_community_name = "app-community"
+}
+
 module "network" {
   source  = "../../modules/network"
   tf      = local.tf
@@ -38,6 +51,7 @@ module "network" {
   nat_instance = var.network.nat_instance
   bastion = var.network.bastion
   session_manager_policy = module.ssm.session_manager_policy
+  multi_az = var.network.multi_az
 }
 
 module "tooling" {
@@ -80,8 +94,8 @@ module "ingress_common_public" {
   }
   hostedzone_id   = var.hostedzone_id
   domain          = var.domain
-  hosts = {
-    app_community = var.ecs_services.app_community.dns.external_host
+  fqdn = {
+    app_community = local.fqdn.app_community
   }
   targets = {
     api_core = {
@@ -94,6 +108,11 @@ module "ingress_common_public" {
     }
   }
   certificate_arn = module.acm.current_region_certificate_arn
+  cognito = {
+    user_pool_arn = module.cognito_user.user_pool_arn
+    user_pool_client_id = module.cognito_user.community_user_pool_client_id
+    user_pool_domain = module.cognito_user.community_user_pool_domain
+  }
   logging_bucket = module.logging_bucket.bucket
   logging_bucket_prefix = module.logging_bucket.prefix_alb
 }
@@ -282,13 +301,12 @@ resource "aws_iam_user_policy" "github_deployer" {
   })
 }
 
-# module "auth" {
-#   source = "../../modules/auth"
-#   tf      = local.tf
-#   app = {
-#     callback_urls = [
-#       "https://${var.application.app_community.hosts.app_console}.${var.domain}",
-#       "https://${var.hosts.app_console}.${var.domain}/oauth2/idpresponse"
-#     ]
-#   }
-# }
+module "cognito_user" {
+  source = "../../modules/cognito/user"
+  tf     = local.tf
+  callback_urls = [
+    "https://${local.fqdn.app_community}",
+    "https://${local.fqdn.app_community}/oauth2/idpresponse"
+  ]
+  user_pool_domain = var.cognito.user.user_pool_domain
+}

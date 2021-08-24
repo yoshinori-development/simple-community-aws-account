@@ -72,22 +72,22 @@ data "aws_region" "current" {}
 
 locals {
   bucket_name = "${var.tf.fullname}-logging"
-  prefix_alb = "alb"
+  prefix_alb  = "alb"
 }
 
 resource "aws_s3_bucket" "logging" {
   bucket = local.bucket_name
   server_side_encryption_configuration {
     rule {
-       apply_server_side_encryption_by_default {
-         sse_algorithm = "AES256"
-       }
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
     }
   }
 }
 
 resource "aws_s3_bucket_public_access_block" "logging" {
-  bucket = aws_s3_bucket.logging.id
+  bucket                  = aws_s3_bucket.logging.id
   block_public_acls       = true
   ignore_public_acls      = true
   block_public_policy     = true

@@ -9,10 +9,10 @@ locals {
 }
 
 resource "aws_sns_topic" "notification" {
-  name            = local.notification
-  display_name    = local.notification
+  name              = local.notification
+  display_name      = local.notification
   kms_master_key_id = aws_kms_key.topic_encription.key_id
-  policy = <<EOF
+  policy            = <<EOF
 {
   "Version": "2008-10-17",
   "Id": "__default_policy_ID",
@@ -44,7 +44,7 @@ resource "aws_sns_topic" "notification" {
   ]
 }
 EOF
-  delivery_policy = <<EOF
+  delivery_policy   = <<EOF
 {
   "http": {
     "defaultHealthyRetryPolicy": {
@@ -83,8 +83,8 @@ resource "aws_sns_topic_subscription" "notification" {
 resource "aws_kms_key" "topic_encription" {
   description             = "Notification topic encryption key"
   deletion_window_in_days = 7
-  enable_key_rotation = true
-  policy = <<EOF
+  enable_key_rotation     = true
+  policy                  = <<EOF
 {
   "Id": "key-policy",
   "Version": "2012-10-17",

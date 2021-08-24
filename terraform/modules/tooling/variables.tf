@@ -22,7 +22,8 @@ variable "subnet" {
 
 variable "instance" {
   type = object({
-    ami = string
+    is_spot = bool
+    ami           = string
     instance_type = string
   })
 }

@@ -11,8 +11,8 @@ data "aws_region" "current" {}
 resource "aws_kms_key" "parameter_encription" {
   description             = "Ssm parameter encryption key"
   deletion_window_in_days = 7
-  enable_key_rotation = true
-  policy = <<EOF
+  enable_key_rotation     = true
+  policy                  = <<EOF
 {
   "Id": "key-policy",
   "Version": "2012-10-17",
@@ -63,8 +63,8 @@ EOF
 resource "aws_kms_key" "session_manager_encription" {
   description             = "Ssm session manager encryption key"
   deletion_window_in_days = 7
-  enable_key_rotation = true
-  policy = <<EOF
+  enable_key_rotation     = true
+  policy                  = <<EOF
 {
   "Id": "key-policy",
   "Version": "2012-10-17",
@@ -124,17 +124,17 @@ EOF
 }
 
 resource "aws_cloudwatch_log_group" "session-manager" {
-  name = "${var.tf.fullname}-session-manager"
+  name              = "${var.tf.fullname}-session-manager"
   retention_in_days = 0
-  kms_key_id = aws_kms_key.session_manager_encription.arn
+  kms_key_id        = aws_kms_key.session_manager_encription.arn
 }
 
 # Session ManagerのIAM Policyは以下を参照
 # https://docs.aws.amazon.com/ja_jp/systems-manager/latest/userguide/getting-started-create-iam-instance-profile.html
 resource "aws_iam_policy" "session-manager" {
-  name = "${var.tf.fullname}-session-manager"
+  name        = "${var.tf.fullname}-session-manager"
   description = "${var.tf.fullname}-session-manager"
-  policy = <<EOF
+  policy      = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [

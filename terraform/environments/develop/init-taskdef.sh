@@ -1,7 +1,9 @@
 #!/bin/sh
 
+profile="sc-develop"
+
 aws ecs register-task-definition \
-  --profile community \
+  --profile $profile \
   --family simple-community-develop-api-core \
   --network-mode "awsvpc" \
   --requires-compatibilities "FARGATE" \
@@ -10,7 +12,7 @@ aws ecs register-task-definition \
   --container-definitions "[{\"name\":\"api\",\"image\":\"nginx\",\"portMappings\": [{\"containerPort\": 80}]}]"
 
 aws ecs register-task-definition \
-  --profile community \
+  --profile $profile \
   --family simple-community-develop-app-community \
   --network-mode "awsvpc" \
   --requires-compatibilities "FARGATE" \

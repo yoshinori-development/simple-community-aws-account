@@ -7,14 +7,14 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "3.54.0"
+      version = "3.55.0"
     }
   }
   # backendに変数が使用できないためハードコード
   backend "s3" {
     bucket         = "ys-simple-community-tfstate"
     region         = "ap-northeast-1"
-    profile        = "simple-community-develop" # ここを書き換える
+    profile        = "your-profile-name" # ここを書き換える
     key            = "simple-community/develop.tfstate"
     dynamodb_table = "simple-community-tfstate-lock"
     encrypt        = true
@@ -26,5 +26,5 @@ terraform {
 # profile変数のデフォルト値指定をそのまま使用している。
 variable "profile" {
   type = string
-  default = "simple-community-develop" # ここを書き換える
+  default = "your-profile-name" # ここを書き換える
 }

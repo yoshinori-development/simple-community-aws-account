@@ -22,6 +22,9 @@ locals {
     fullname      = "${var.name}-${var.env}"
     fullshortname = "${var.shortname}-${var.env}"
   }
+  fqdn = {
+    app_community = var.ecs_services.app_community.dns.external_host == "" ? var.domain : "${var.ecs_services.app_community.dns.external_host}.${var.domain}"
+  }
 }
 
 variable "administrator_role_arn" {
@@ -77,20 +80,22 @@ variable "network" {
       })
     })
     nat_instance = object({
-      ami = string
+      ami           = string
       instance_type = string
     })
     bastion = object({
       ami_name_filter = string
-      instance_type = string
+      instance_type   = string
     })
+    multi_az = bool
   })
 }
 
 variable "tooling" {
   type = object({
     instance = object({
-      ami = string
+      is_spot = bool
+      ami           = string
       instance_type = string
     })
   })
@@ -133,20 +138,20 @@ variable "rds" {
       })
       alarm = object({
         thresholds = object({
-          cpu_utilization = string
-          cpu_credit_balance = string
-          free_storage_space = string
-          freeable_memory = string
-          swap_usage = string
-          connections = string
-          burst_balance = string
-          ebs_io_balance = string
-          ebs_byte_balance = string
-          read_iops = string
-          write_iops = string
-          read_throughtput = string
-          write_throughtput = string
-          network_receive_throughtput = string
+          cpu_utilization              = string
+          cpu_credit_balance           = string
+          free_storage_space           = string
+          freeable_memory              = string
+          swap_usage                   = string
+          connections                  = string
+          burst_balance                = string
+          ebs_io_balance               = string
+          ebs_byte_balance             = string
+          read_iops                    = string
+          write_iops                   = string
+          read_throughtput             = string
+          write_throughtput            = string
+          network_receive_throughtput  = string
           network_transmit_throughtput = string
         })
       })
@@ -156,7 +161,7 @@ variable "rds" {
 
 variable "ecs_cluster" {
   type = object({
-    name = string
+    name               = string
     capacity_providers = list(string)
   })
 }
@@ -174,7 +179,7 @@ variable "ecs_services" {
       })
       capacity_provider_strategy = object({
         capacity_provider = string
-        weight = number
+        weight            = number
       })
       desired_count = number
       container = object({
@@ -194,7 +199,7 @@ variable "ecs_services" {
       })
       capacity_provider_strategy = object({
         capacity_provider = string
-        weight = number
+        weight            = number
       })
       desired_count = number
       dns = object({
@@ -210,7 +215,7 @@ variable "ecs_services" {
         memory_utilization = string
       })
     })
-  }) 
+  })
 }
 
 variable "ssm_parameter_prefix" {
@@ -221,16 +226,13 @@ variable "service_discovery_namespace" {
   type = string
 }
 
-# variable "auth" {
-#   type = object({
-#     answer = object({
-#       user_pool_domain = string
-#     })
-#     console = object({
-#       user_pool_domain = string
-#     })
-#   })
-# }
+variable "cognito" {
+  type = object({
+    user = object({
+      user_pool_domain = string
+    })
+  })
+}
 
 # variable "slack" {
 #   type = object({

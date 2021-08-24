@@ -59,6 +59,18 @@ output "bastion_instance_role" {
   value = aws_iam_role.bastion
 }
 
+output "bastion_instance_id" {
+  value = aws_instance.bastion.id
+}
+
 output "nat_instance_role" {
   value = aws_iam_role.nat
+}
+
+output "nat_instance_a_id" {
+  value = aws_instance.nat-a.id
+}
+
+output "nat_instance_c_id" {
+  value = var.multi_az ? aws_instance.nat-c[0].id : null
 }
