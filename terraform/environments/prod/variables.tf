@@ -98,7 +98,7 @@ variable "tooling" {
 
 variable "rds" {
   type = object({
-    core = object({
+    main = object({
       allowed_security_group_ids = list(string)
       ssm_parameters = object({
         database_password = object({
@@ -167,7 +167,7 @@ variable "ecr_repositories" {
 
 variable "ecs_services" {
   type = object({
-    api_core = object({
+    api_main = object({
       env = string
       ecs_task_definition = object({
         name = string

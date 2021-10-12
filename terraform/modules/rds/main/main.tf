@@ -6,7 +6,7 @@ resource "aws_db_subnet_group" "common" {
   subnet_ids = var.subnet_ids
 }
 
-resource "aws_db_parameter_group" "core" {
+resource "aws_db_parameter_group" "main" {
   name   = "${var.tf.fullname}-${var.db_instance.identifier}"
   family = "mysql8.0"
 
@@ -77,7 +77,7 @@ resource "aws_db_parameter_group" "core" {
   }
 }
 
-resource "aws_db_option_group" "core" {
+resource "aws_db_option_group" "main" {
   name                     = "${var.tf.fullname}-${var.db_instance.identifier}"
   option_group_description = "${var.tf.fullname}-${var.db_instance.identifier}"
   engine_name              = "mysql"
@@ -100,7 +100,7 @@ resource "aws_db_option_group" "core" {
   }
 }
 
-resource "aws_security_group" "core" {
+resource "aws_security_group" "main" {
   name        = "${var.tf.fullname}-${var.db_instance.identifier}"
   description = "${var.tf.fullname}-${var.db_instance.identifier}"
   vpc_id      = var.vpc.id
@@ -113,7 +113,7 @@ resource "aws_security_group" "core" {
   }
 }
 
-resource "aws_security_group_rule" "core" {
+resource "aws_security_group_rule" "main" {
   for_each = {
     for key, id in var.allowed_security_group_ids : key => id
   }
@@ -122,16 +122,16 @@ resource "aws_security_group_rule" "core" {
   to_port                  = var.db_instance.port
   protocol                 = "tcp"
   source_security_group_id = each.value
-  security_group_id        = aws_security_group.core.id
+  security_group_id        = aws_security_group.main.id
 }
 
-resource "aws_db_instance" "core" {
+resource "aws_db_instance" "main" {
   name                                = var.db_instance.dbname
   engine                              = "mysql"
   engine_version                      = var.db_instance.engine_version
   multi_az                            = var.db_instance.multi_az
-  parameter_group_name                = aws_db_parameter_group.core.name
-  option_group_name                   = aws_db_option_group.core.name
+  parameter_group_name                = aws_db_parameter_group.main.name
+  option_group_name                   = aws_db_option_group.main.name
   db_subnet_group_name                = aws_db_subnet_group.common.id
   instance_class                      = var.db_instance.instance_class
   identifier                          = var.db_instance.identifier
@@ -141,15 +141,15 @@ resource "aws_db_instance" "core" {
   allow_major_version_upgrade         = var.db_instance.allow_major_version_upgrade
   auto_minor_version_upgrade          = var.db_instance.auto_minor_version_upgrade
   port                                = var.db_instance.port
-  vpc_security_group_ids              = [aws_security_group.core.id]
+  vpc_security_group_ids              = [aws_security_group.main.id]
   publicly_accessible                 = var.db_instance.publicly_accessible
   username                            = var.db_instance.username
-  password                            = aws_ssm_parameter.core_password.value
+  password                            = aws_ssm_parameter.main_password.value
   iam_database_authentication_enabled = var.db_instance.iam_database_authentication_enabled
   performance_insights_enabled        = var.db_instance.performance_insights_enabled
-  performance_insights_kms_key_id     = var.db_instance.performance_insights_enabled ? aws_kms_key.core.arn : null
+  performance_insights_kms_key_id     = var.db_instance.performance_insights_enabled ? aws_kms_key.main.arn : null
   storage_encrypted                   = var.db_instance.storage_encrypted
-  kms_key_id                          = aws_kms_key.core.arn
+  kms_key_id                          = aws_kms_key.main.arn
   delete_automated_backups            = var.db_instance.delete_automated_backups
   deletion_protection                 = var.db_instance.deletion_protection
   backup_retention_period             = var.db_instance.backup_retention_period
@@ -159,17 +159,17 @@ resource "aws_db_instance" "core" {
   final_snapshot_identifier           = "${var.tf.fullname}-${formatdate("YYYY-mm-DD", timestamp())}"
 }
 
-resource "random_password" "core" {
+resource "random_password" "main" {
   length           = 24
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "aws_ssm_parameter" "core_password" {
+resource "aws_ssm_parameter" "main_password" {
   name   = var.ssm.parameters.database_password.name
   type   = "SecureString"
   key_id = var.ssm.kms_key_id
-  value  = random_password.core.result
+  value  = random_password.main.result
 }
 
 # 特定サービスのみへ権限を付与可能なキーポリシーについては以下参照
@@ -178,13 +178,13 @@ resource "aws_ssm_parameter" "core_password" {
 # https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/Overview.Encryption.Keys.html
 # パフォーマンスインサイトに必要な権限は以下参照
 # https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/USER_PerfInsights.access-control.html#USER_PerfInsights.access-control.cmk-policy
-# resource "aws_kms_alias" "core" {
-#   name          = "alias/${var.tf.fullname}/rds-core"
-#   target_key_id = aws_kms_key.core.key_id
-# }
+resource "aws_kms_alias" "main" {
+  name          = "alias/${var.tf.fullname}/rds-main"
+  target_key_id = aws_kms_key.main.key_id
+}
 
-resource "aws_kms_key" "core" {
-  description             = "RDS core encryption key"
+resource "aws_kms_key" "main" {
+  description             = "RDS main encryption key"
   deletion_window_in_days = 7
   enable_key_rotation     = true
   policy                  = <<EOF
@@ -232,8 +232,8 @@ EOF
 }
 
 # # Cloudwatch Metric Alerms
-# resource "aws_cloudwatch_metric_alarm" "core_cpu_utilization_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_cpu_utilization_high"
+# resource "aws_cloudwatch_metric_alarm" "main_cpu_utilization_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_cpu_utilization_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -246,12 +246,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_cpu_credit_balance_low" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_cpu_credit_balance_low"
+# resource "aws_cloudwatch_metric_alarm" "main_cpu_credit_balance_low" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_cpu_credit_balance_low"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -264,12 +264,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_free_storage_space_low" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_free_storage_space_threshold"
+# resource "aws_cloudwatch_metric_alarm" "main_free_storage_space_low" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_free_storage_space_threshold"
 #   comparison_operator = "LessThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -282,12 +282,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_freeable_memory_low" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_freeable_memory_low"
+# resource "aws_cloudwatch_metric_alarm" "main_freeable_memory_low" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_freeable_memory_low"
 #   comparison_operator = "LessThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -300,12 +300,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_swap_usage_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_swap_usage_high"
+# resource "aws_cloudwatch_metric_alarm" "main_swap_usage_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_swap_usage_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -318,12 +318,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_connections_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_connections_high"
+# resource "aws_cloudwatch_metric_alarm" "main_connections_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_connections_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -336,12 +336,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_burst_balance_low" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_burst_balance_low"
+# resource "aws_cloudwatch_metric_alarm" "main_burst_balance_low" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_burst_balance_low"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -354,12 +354,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_ebs_io_balance_low" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_ebs_io_balance_low"
+# resource "aws_cloudwatch_metric_alarm" "main_ebs_io_balance_low" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_ebs_io_balance_low"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -372,12 +372,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_ebs_byte_balance_low" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_ebs_byte_balance_low"
+# resource "aws_cloudwatch_metric_alarm" "main_ebs_byte_balance_low" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_ebs_byte_balance_low"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -390,12 +390,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_read_iops_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_read_iops_high"
+# resource "aws_cloudwatch_metric_alarm" "main_read_iops_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_read_iops_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -408,13 +408,13 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 #   tags = var.tf.tags
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_write_iops_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_write_iops_high"
+# resource "aws_cloudwatch_metric_alarm" "main_write_iops_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_write_iops_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -427,12 +427,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_read_throughtput_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_read_throughtput_high"
+# resource "aws_cloudwatch_metric_alarm" "main_read_throughtput_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_read_throughtput_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -445,12 +445,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_write_throughtput_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_write_throughtput_high"
+# resource "aws_cloudwatch_metric_alarm" "main_write_throughtput_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_write_throughtput_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -463,12 +463,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_network_receive_throughtput_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_network_receive_throughtput_high"
+# resource "aws_cloudwatch_metric_alarm" "main_network_receive_throughtput_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_network_receive_throughtput_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -481,12 +481,12 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }
 
-# resource "aws_cloudwatch_metric_alarm" "core_network_transmit_throughtput_high" {
-#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.core.name}_network_transmit_throughtput_high"
+# resource "aws_cloudwatch_metric_alarm" "main_network_transmit_throughtput_high" {
+#   alarm_name          = "${var.tf.fullname}_rds_${aws_db_instance.main.name}_network_transmit_throughtput_high"
 #   comparison_operator = "GreaterThanThreshold"
 #   evaluation_periods  = "5"
 #   datapoints_to_alarm = "3"
@@ -499,6 +499,6 @@ EOF
 #   alarm_actions       = [var.alarm.sns_topic_arn]
 #   ok_actions          = [var.alarm.sns_topic_arn]
 #   dimensions = {
-#     DBInstanceIdentifier = aws_db_instance.core.id
+#     DBInstanceIdentifier = aws_db_instance.main.id
 #   }
 # }

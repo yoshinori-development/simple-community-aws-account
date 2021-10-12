@@ -70,7 +70,7 @@ resource "aws_iam_policy" "start-stop-resources" {
         "rds:DescribeDBInstances"
       ],
       "Resource": [
-        "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.rds_core_name}"
+        "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:${var.rds_main_name}"
       ]
     },
     {
@@ -79,7 +79,7 @@ resource "aws_iam_policy" "start-stop-resources" {
         "ecs:UpdateService"
       ],
       "Resource": [
-        "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.ecs_cluster_name}/${var.ecs_service_api_core_name}",
+        "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.ecs_cluster_name}/${var.ecs_service_api_main_name}",
         "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:service/${var.ecs_cluster_name}/${var.ecs_service_app_community_name}"
       ]
     }
@@ -113,9 +113,9 @@ resource "aws_lambda_function" "stop-resources" {
       EC2_TOOLING_ID = var.ec2_tooling_id
       EC2_NAT_ID = var.ec2_nat_id
       EC2_BASTION_ID = var.ec2_bastion_id
-      RDS_CORE_ID = var.rds_core_id
+      RDS_CORE_ID = var.rds_main_id
       ECS_CLUSTER_NAME = var.ecs_cluster_name
-      ECS_SERVICES_API_CORE_NAME = var.ecs_service_api_core_name
+      ECS_SERVICES_API_CORE_NAME = var.ecs_service_api_main_name
       ECS_SERVICES_APP_COMMUNITY_NAME = var.ecs_service_app_community_name
     }
   }
@@ -134,9 +134,9 @@ resource "aws_lambda_function" "start-resources" {
     variables = {
       EC2_NAT_ID = var.ec2_nat_id
       EC2_BASTION_ID = var.ec2_bastion_id
-      RDS_CORE_ID = var.rds_core_id
+      RDS_CORE_ID = var.rds_main_id
       ECS_CLUSTER_NAME = var.ecs_cluster_name
-      ECS_SERVICES_API_CORE_NAME = var.ecs_service_api_core_name
+      ECS_SERVICES_API_CORE_NAME = var.ecs_service_api_main_name
       ECS_SERVICES_APP_COMMUNITY_NAME = var.ecs_service_app_community_name
     }
   }

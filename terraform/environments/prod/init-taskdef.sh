@@ -2,7 +2,7 @@
 
 aws ecs register-task-definition \
   --profile community \
-  --family simple-community-prod-api-core \
+  --family simple-community-prod-api-main \
   --network-mode "awsvpc" \
   --requires-compatibilities "FARGATE" \
   --cpu "256" \

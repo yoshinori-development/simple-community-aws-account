@@ -13,8 +13,8 @@ module "health_check_notify_slack" {
   slack_username    = var.slack.username
 }
 
-resource "aws_cloudwatch_metric_alarm" "api-core-health-check" {
-  alarm_name          = "${local.infra_fullname}-api_core_health_check"
+resource "aws_cloudwatch_metric_alarm" "api-main-health-check" {
+  alarm_name          = "${local.infra_fullname}-api_main_health_check"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "HealthCheckStatus"
@@ -22,22 +22,22 @@ resource "aws_cloudwatch_metric_alarm" "api-core-health-check" {
   period              = "60"
   statistic           = "Minimum"
   threshold           = "1"
-  alarm_description   = "This metric monitor api-core url healthcheck"
+  alarm_description   = "This metric monitor api-main url healthcheck"
   alarm_actions       = [module.health_check_notify_slack.this_slack_topic_arn]
   ok_actions          = [module.health_check_notify_slack.this_slack_topic_arn]
   dimensions = {
-    HealthCheckId = aws_route53_health_check.api-core.id
+    HealthCheckId = aws_route53_health_check.api-main.id
   }
 }
 
-resource "aws_route53_health_check" "api-core" {
+resource "aws_route53_health_check" "api-main" {
   fqdn              = var.fqdn
   port              = 443
   type              = "HTTPS"
   resource_path     = "/api/health"
   failure_threshold = "5"
   request_interval  = "30"
-  # cloudwatch_alarm_name   = "api_core_health_check"
+  # cloudwatch_alarm_name   = "api_main_health_check"
   # cloudwatch_alarm_region = "${data.aws_region.current.name}"
   # cloudwatch_alarm_region = "us-east-1"
 

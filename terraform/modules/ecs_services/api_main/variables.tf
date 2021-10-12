@@ -78,13 +78,13 @@ variable "ecs_service" {
   })
 }
 
-variable "ssm_parameter_prefix" {
-  type = string
+variable "allow_ssm_parameter_paths" {
+  type = list(string)
 }
 
 variable "kms_key_ids" {
   type = object({
-    rds_core = string
+    ssm = string
   })
 }
 

@@ -36,7 +36,7 @@ variable "fqdn" {
 
 variable "targets" {
   type = object({
-    api_core = object({
+    api_main = object({
       port              = number
       health_check_path = string
     })

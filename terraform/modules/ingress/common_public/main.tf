@@ -84,7 +84,7 @@ resource "aws_lb_listener" "common-public-listener" {
 
 resource "aws_lb_listener_rule" "common-public-forward-app-community" {
   listener_arn = aws_lb_listener.common-public-listener.arn
-  priority     = 100
+  priority     = 200
 
   action {
     type = "authenticate-cognito"
@@ -116,9 +116,43 @@ resource "aws_lb_listener_rule" "common-public-forward-app-community" {
   }
 }
 
-resource "aws_lb_listener_rule" "common-public-forward-api-core" {
+resource "aws_lb_listener_rule" "common-public-forward-app-community" {
   listener_arn = aws_lb_listener.common-public-listener.arn
-  priority     = 500
+  priority     = 200
+
+  action {
+    type = "authenticate-cognito"
+    authenticate_cognito {
+      scope                      = "openid email"
+      on_unauthenticated_request = "allow"
+      user_pool_arn       = var.cognito.user_pool_arn
+      user_pool_client_id = var.cognito.user_pool_client_id
+      user_pool_domain    = var.cognito.user_pool_domain
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.common-public-app-community.arn
+  }
+
+  condition {
+    host_header {
+      values = [
+        var.fqdn.app_community
+      ]
+    }
+  }
+  condition {
+    path_pattern {
+      values = ["*"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "common-public-forward-api-main" {
+  listener_arn = aws_lb_listener.common-public-listener.arn
+  priority     = 100
 
   action {
     type = "authenticate-cognito"
@@ -133,7 +167,7 @@ resource "aws_lb_listener_rule" "common-public-forward-api-core" {
   
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.common-public-api-core.arn
+    target_group_arn = aws_lb_target_group.common-public-api-main.arn
   }
 
   condition {
@@ -162,15 +196,15 @@ resource "aws_lb_target_group" "common-public-app-community" {
   }
 }
 
-resource "aws_lb_target_group" "common-public-api-core" {
-  name        = "${var.tf.fullshortname}-api-core"
-  port        = var.targets.api_core.port
+resource "aws_lb_target_group" "common-public-api-main" {
+  name        = "${var.tf.fullshortname}-api-main"
+  port        = var.targets.api_main.port
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = var.vpc.id
   health_check {
-    path = var.targets.api_core.health_check_path
-    port = var.targets.api_core.port
+    path = var.targets.api_main.health_check_path
+    port = var.targets.api_main.port
   }
 }
 

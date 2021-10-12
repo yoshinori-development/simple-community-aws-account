@@ -4,7 +4,7 @@ profile="sc-develop"
 
 aws ecs register-task-definition \
   --profile $profile \
-  --family simple-community-develop-api-core \
+  --family simple-community-develop-api-main \
   --network-mode "awsvpc" \
   --requires-compatibilities "FARGATE" \
   --cpu "256" \

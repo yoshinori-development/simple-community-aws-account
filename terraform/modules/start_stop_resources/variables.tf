@@ -20,11 +20,11 @@ variable "ec2_bastion_id" {
   type = string
 }
 
-variable "rds_core_id" {
+variable "rds_main_id" {
   type = string
 }
 
-variable "rds_core_name" {
+variable "rds_main_name" {
   type = string
 }
 
@@ -32,7 +32,7 @@ variable "ecs_cluster_name" {
   type = string
 }
 
-variable "ecs_service_api_core_name" {
+variable "ecs_service_api_main_name" {
   type = string
 }
 

@@ -45,7 +45,7 @@ resource "aws_ecs_service" "default" {
   }
 
   service_registries {
-    registry_arn = aws_service_discovery_service.api-core.arn
+    registry_arn = aws_service_discovery_service.api-main.arn
   }
 }
 
@@ -154,24 +154,28 @@ resource "aws_iam_policy" "task-execution-policy" {
   name        = "${local.fullname}-execution-policy"
   description = "${local.fullname} execution policy"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ssm:GetParameters",
-        "kms:Decrypt"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${var.ssm_parameter_prefix}",
-        "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key:${var.kms_key_ids.rds_core}"
-      ]
-    }
-  ]
-}
-EOF
+  policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "AllowParameterStores",
+        "Action": [
+          "ssm:GetParameters"
+        ],
+        "Effect": "Allow",
+        "Resource": "${var.allow_ssm_parameter_paths}"
+      },
+      {
+        "Action": [
+          "kms:Decrypt"
+        ],
+        "Effect": "Allow",
+        "Resource": [
+          "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key:${var.kms_key_ids.ssm}"
+        ]
+      }
+    ]
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "task-execution-policy-attach" {
@@ -179,8 +183,8 @@ resource "aws_iam_role_policy_attachment" "task-execution-policy-attach" {
   policy_arn = aws_iam_policy.task-execution-policy.arn
 }
 
-resource "aws_service_discovery_service" "api-core" {
-  name = "api-core"
+resource "aws_service_discovery_service" "api-main" {
+  name = "api-main"
 
   dns_config {
     namespace_id = var.service_discovery.private_dns_namespace_id

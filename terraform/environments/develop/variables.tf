@@ -45,6 +45,17 @@ variable "ssm" {
   })
 }
 
+variable "github" {
+  type = object({
+    organization = string
+    id_provider = object({
+      url = string
+      client_id_list = list(string)
+      thumbprint_list = list(string)
+    })
+  })
+}
+
 variable "network" {
   type = object({
     vpc = object({
@@ -103,7 +114,7 @@ variable "tooling" {
 
 variable "rds" {
   type = object({
-    core = object({
+    main = object({
       allowed_security_group_ids = list(string)
       ssm_parameters = object({
         database_password = object({
@@ -172,7 +183,7 @@ variable "ecr_repositories" {
 
 variable "ecs_services" {
   type = object({
-    api_core = object({
+    api_main = object({
       env = string
       ecs_task_definition = object({
         name = string
@@ -216,10 +227,6 @@ variable "ecs_services" {
       })
     })
   })
-}
-
-variable "ssm_parameter_prefix" {
-  type = string
 }
 
 variable "service_discovery_namespace" {

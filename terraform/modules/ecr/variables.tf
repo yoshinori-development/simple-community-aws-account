@@ -12,7 +12,7 @@ variable "administrator_role_arn" {
   type = string
 }
 
-variable "deploy_user_arn" {
+variable "deploy_role_arn" {
   type = string
 }
 
